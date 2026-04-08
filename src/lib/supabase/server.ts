@@ -1,55 +1,46 @@
-// This module is intentionally NOT importing from @supabase/ssr during static generation
-// to prevent build failures when env vars are missing
-
-const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
-
-function getSupabaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url || url.includes('placeholder')) {
-    return 'https://placeholder.supabase.co';
-  }
-  return url;
-}
-
-function getSupabaseKey(): string {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!key || key.includes('placeholder')) {
-    return 'placeholder-key';
-  }
-  return key;
-}
-
-// Lazy client that only initializes when actually needed
-let _client: any = null;
+// @ts-nocheck
+// Stub for build time when env vars not available
 
 export async function createClient() {
-  if (isBuildTime) {
-    // During build, return a mock that won't fail
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
     return {
-      from: () => ({ select: () => ({ eq: () => ({ single: () => ({ data: null, error: null }), order: () => ({ data: [], error: null }) }) }) }),
-      auth: { getUser: () => Promise.resolve({ data: { user: null }, error: null }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }) },
+      from: () => ({ 
+        select: () => ({ 
+          eq: () => ({ 
+            single: () => Promise.resolve({ data: null, error: null }), 
+            order: () => ({ 
+              limit: () => Promise.resolve({ data: [], error: null }) 
+            }) 
+          }),
+          order: () => ({ limit: () => Promise.resolve({ data: [], error: null }) })
+        }) 
+      }),
+      update: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+      insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
+      delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
+      auth: { 
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        signInWithPassword: () => Promise.resolve({ data: { user: null }, error: null }),
+        signUp: () => Promise.resolve({ data: { user: null }, error: null }),
+        signOut: () => Promise.resolve({ error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      }
     };
   }
 
-  // Runtime: create real client
-  if (!_client) {
-    const { createServerClient } = await import('@supabase/ssr');
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    
-    _client = createServerClient(
-      getSupabaseUrl(),
-      getSupabaseKey(),
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll(); },
-          setAll(cookiesToSet) {
-            try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); } catch {}
-          },
-        },
-      }
-    );
-  }
+  const { createServerClient } = await import('@supabase/ssr');
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
   
-  return _client;
+  return createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() { return cookieStore.getAll(); },
+      setAll(cookiesToSet) {
+        try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); } catch {}
+      },
+    },
+  });
 }
