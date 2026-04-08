@@ -1,19 +1,20 @@
 // @ts-nocheck
-// Stub for build time when env vars not available
+
+const REAL_SUPABASE_URL = 'https://emrjanuxmmgctjhctaty.supabase.co';
+const REAL_SUPABASE_KEY = 'sb_publishable_EhILy3hsiRItmhZpXPiHKg_YWE1JPIC';
 
 export async function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || REAL_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || REAL_SUPABASE_KEY;
 
-  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
+  // During build time with placeholder values, return stub
+  if (supabaseUrl.includes('placeholder')) {
     return {
       from: () => ({ 
         select: () => ({ 
           eq: () => ({ 
             single: () => Promise.resolve({ data: null, error: null }), 
-            order: () => ({ 
-              limit: () => Promise.resolve({ data: [], error: null }) 
-            }) 
+            order: () => ({ limit: () => Promise.resolve({ data: [], error: null }) }) 
           }),
           order: () => ({ limit: () => Promise.resolve({ data: [], error: null }) })
         }) 
@@ -31,6 +32,7 @@ export async function createClient() {
     };
   }
 
+  // Runtime: real client
   const { createServerClient } = await import('@supabase/ssr');
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
