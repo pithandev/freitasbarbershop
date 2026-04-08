@@ -41,8 +41,8 @@ async function getData() {
 
   const stats = {
     totalAppointments: appointmentsResult.data?.length || 0,
-    totalRevenue: statsResult.data?.reduce((sum, a) => sum + (a.payment_status === 'paid' ? Number(a.total_price) : 0), 0) || 0,
-    pendingPayments: statsResult.data?.filter(a => a.payment_status === 'pending').length || 0,
+    totalRevenue: 0,
+    pendingPayments: 0,
     completedToday: appointments.filter(a => 
       a.status === 'completed' && 
       new Date(a.scheduled_at).toDateString() === new Date().toDateString()

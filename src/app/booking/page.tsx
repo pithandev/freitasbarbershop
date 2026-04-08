@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import { Service } from '@/types/database';
-import BookingForm from './booking-form';
+
+export const dynamic = 'force-dynamic';
 
 export default async function BookingPage() {
   const supabase = await createClient();
@@ -16,6 +16,8 @@ export default async function BookingPage() {
     .select('*')
     .eq('is_active', true)
     .order('display_order');
+
+  const { default: BookingForm } = await import('./booking-form');
 
   return (
     <div className="min-h-screen bg-background">
