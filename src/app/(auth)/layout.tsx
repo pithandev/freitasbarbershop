@@ -1,12 +1,25 @@
-import { Suspense } from 'react';
-import Loading from '../loading';
+'use client';
+
+import { useState, useEffect } from 'react';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <Suspense fallback={<Loading />}>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-        <div className="w-full max-w-md space-y-6">{children}</div>
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
-    </Suspense>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-6">{children}</div>
+    </div>
   );
 }

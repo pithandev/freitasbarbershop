@@ -1,4 +1,4 @@
-import { AuthProvider } from '@/hooks/use-auth';
+import { AuthProvider } from '@/components/auth-provider';
 import type { Metadata } from 'next';
 import './globals.css';
 
