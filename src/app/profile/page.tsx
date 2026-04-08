@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { Appointment } from '@/types/database';
 import ProfileView from './profile-view';
 
+export const dynamic = 'force-dynamic';
+
 async function getProfileData() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
