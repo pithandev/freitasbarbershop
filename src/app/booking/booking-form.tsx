@@ -178,6 +178,9 @@ export default function BookingForm({ services, barbers }: BookingFormProps) {
       
       if (data.initPoint) {
         window.location.href = data.initPoint;
+      } else if (data.error) {
+        setError(data.error);
+        setLoading(false);
       } else {
         throw new Error('Failed to get payment URL');
       }
@@ -192,12 +195,7 @@ export default function BookingForm({ services, barbers }: BookingFormProps) {
     
     setLoading(true);
     
-    try {
-      router.push(`/booking/success?appointment=${appointmentId}&payment=cash`);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao confirmar');
-      setLoading(false);
-    }
+    router.push(`/booking/success?appointment=${appointmentId}&payment=cash`);
   };
 
   const renderStepContent = () => {
@@ -279,7 +277,12 @@ export default function BookingForm({ services, barbers }: BookingFormProps) {
               <Input
                 type="date"
                 value={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''}
-                onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                onChange={(e) => {
+                  const date = new Date(e.target.value);
+                  if (!isNaN(date.getTime())) {
+                    setSelectedDate(date);
+                  }
+                }}
                 min={format(new Date(), 'yyyy-MM-dd')}
               />
             </div>

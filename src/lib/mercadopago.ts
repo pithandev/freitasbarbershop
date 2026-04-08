@@ -1,8 +1,23 @@
 // @ts-nocheck
-import { createClient } from '@/lib/supabase/server';
+const REAL_SUPABASE_URL = 'https://emrjanuxmmgctjhctaty.supabase.co';
+const REAL_SUPABASE_KEY = 'sb_publishable_EhILy3hsiRItmhZpXPiHKg_YWE1JPIC';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || REAL_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || REAL_SUPABASE_KEY;
 
 export async function createPaymentPreference(appointmentId: string) {
-  const supabase = await createClient();
+  const { createServerClient } = await import('@supabase/ssr');
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() { return cookieStore.getAll(); },
+      setAll(cookiesToSet) {
+        try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); } catch {}
+      },
+    },
+  });
 
   const { data: appointment, error } = await supabase
     .from('appointments')
@@ -33,11 +48,11 @@ export async function createPaymentPreference(appointmentId: string) {
       email: appointment.client.email || `${appointment.client.phone}@freitas.com`,
     },
     external_reference: appointment.id,
-    notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/webhook`,
+    notification_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://freitasbarbershop.vercel.app'}/api/payments/webhook`,
     back_urls: {
-      success: `${process.env.NEXT_PUBLIC_APP_URL}/booking/success?appointment=${appointmentId}&status=success`,
-      failure: `${process.env.NEXT_PUBLIC_APP_URL}/booking/success?appointment=${appointmentId}&status=failure`,
-      pending: `${process.env.NEXT_PUBLIC_APP_URL}/booking/success?appointment=${appointmentId}&status=pending`,
+      success: `${process.env.NEXT_PUBLIC_APP_URL || 'https://freitasbarbershop.vercel.app'}/booking/success?appointment=${appointmentId}&status=success`,
+      failure: `${process.env.NEXT_PUBLIC_APP_URL || 'https://freitasbarbershop.vercel.app'}/booking/success?appointment=${appointmentId}&status=failure`,
+      pending: `${process.env.NEXT_PUBLIC_APP_URL || 'https://freitasbarbershop.vercel.app'}/booking/success?appointment=${appointmentId}&status=pending`,
     },
   };
 
